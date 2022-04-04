@@ -2,9 +2,13 @@ import React from "react"
 import { Redirect } from "react-router-dom"
 
 //CSD
+/*import AccountApplication from "../pages/AccountApplication"
+import PriceList from "../pages/PriceList"*/
+
 import AccountApplication from "../pages/AccountApplication"
 import PriceList from "../pages/PriceList"
 import NewAccountPricingTool from "../pages/NewAccountPricingTool"
+import NARF from "../pages/NARF"
 
 // // Pages Component
 import Chat from "../pages/Chat/Chat"
@@ -15,7 +19,7 @@ import Dashboard from "../pages/Dashboard/index"
 // Pages Calendar
 import Calendar from "../pages/Calendar/index"
 
-// //Ecommerce Pages
+//Ecommerce Pages
 import EcommerceProducts from "../pages/Ecommerce/EcommerceProducts/index"
 import EcommerceProductDetail from "../pages/Ecommerce/EcommerceProducts/EcommerceProductDetail"
 import EcommerceOrders from "../pages/Ecommerce/EcommerceOrders/index"
@@ -131,10 +135,9 @@ const userRoutes = [
   { path: "/dashboard", component: Dashboard },
   { path: "/calendar", component: Calendar },
   { path: "/accountapplication", component: AccountApplication },
-  { path: "/pricelist", component: PriceList },
+  { path: "/pricelist", component: PriceList },  
   { path: "/newaccountpt", component: NewAccountPricingTool },
-
-
+  { path: "/narf", component: NARF },
   //chat
   { path: "/chat", component: Chat },
 

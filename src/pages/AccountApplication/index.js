@@ -25,7 +25,7 @@ import {
 } from "reactstrap"
 
 import classnames from "classnames"
-import { Link, Prompt } from "react-router-dom"
+import { Link, Prompt, useLocation } from "react-router-dom"
 
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb"
@@ -48,11 +48,12 @@ import SignaturePad from 'react-signature-canvas'
 
 import styles from './styles.module.css'
 import { values } from "lodash"
+import { baseUrl } from "../FBLibrary/fbglobals"
 
 //const baseUrl = 'https://fbnarf.mktalt.com/pub';
 //const baseUrl = 'http://localhost:19391';
 //const baseUrl = "http://courage.co.in/testrestapi/index.php"
-import { baseUrl } from "../FBLibrary/fbglobals"
+
 
 class MySignature extends Component {
   state = {trimmedDataURL: null}
@@ -112,7 +113,8 @@ class MySignature extends Component {
 const AccountApplication = () => {
 
   const isDebug = true;
-  
+  const location = useLocation();
+
   const usStates= [
     {
       "masterCode": "","masterDesc": "Select State"
@@ -328,6 +330,10 @@ const [alertMsg, setAlertMsg] = useState("");
 
 //form field state variables below
 
+const [headerRecord, setHeaderRecord] = useState(null);
+const [recordMode, setRecordMode] = useState("create"); //create-edit-readonly
+const [CustomerID, setCustomerID] = useState("");
+  
 //Company Information (First Tab)
 const [DUNSNumber, setDUNSNumber] = useState("");
 const [Name, setName] = useState("")
@@ -339,13 +345,19 @@ const [BillingCity, setBillingCity] = useState("")
 const [BillingState, setBillingState] = useState("")
 const [BillingZip, setBillingZip] = useState("")
 const [BillingPhone, setBillingPhone] = useState("")
-const [DeliveryAddress, setDeliveryAddress] = useState("")
+const [DeliveryAddress, setDeliveryAddress] = useState("") //TODO Remove
+const [DeliveryAddress1, setDeliveryAddress1] = useState("")
+const [DeliveryAddress2, setDeliveryAddress2] = useState("")
+const [DeliveryAddress3, setDeliveryAddress3] = useState("")
+const [DeliveryAddress4, setDeliveryAddress4] = useState("")
 const [DeliveryCity, setDeliveryCity] = useState("")
 const [DeliveryState, setDeliveryState] = useState("")
 const [DeliveryZip, setDeliveryZip] = useState("")
 const [CompanyType, setCompanyType] = useState("Corp")
 const [PrincipalOfficer, setPrincipalOfficer] = useState("")
 const [PrincipalOfficerTitle, setPrincipalOfficerTitle] = useState("")
+const [PrincipalCell, setPrincipalCell] = useState("")
+const [PrincipalEmail, setPrincipalEmail] = useState("")
 const [NatureOfBusiness, setNatureOfBusiness] = useState("")
 const [EstablishedYear, setEstablishedYear] = useState("")
 const [StateIncorporated, setStateIncorporated] = useState("")
@@ -485,6 +497,65 @@ useEffect(() => {
   document.title = "CREDIT APPLICATION (FB1) | Farmer Brothers "
 }, []);
 
+useEffect(() => {
+  console.log("useEffect - location.pathname: " + location.pathname);
+  console.log("useEffect - location.search:" + location.search);
+  
+  if (location.state && location.state.headerRecord) {
+    console.log("useEffect - location.state.headerRecord:");
+    console.log(location.state.headerRecord);
+
+    setHeaderRecord(JSON.parse(JSON.stringify(location.state.headerRecord)));
+    setRecordMode(location.state.recordMode);
+    setCustomerID(location.state.headerRecord["CustomerID"]);
+
+    setDUNSNumber(location.state.headerRecord["DUNSNumber"]);
+    setName(location.state.headerRecord["CustomerName"]);
+    setDBAName(location.state.headerRecord["DBAName"]);
+    setDeliveryAddress1(location.state.headerRecord["DeliveryAddress1"]);
+    setDeliveryAddress2(location.state.headerRecord["DeliveryAddress2"]);
+    setDeliveryAddress3(location.state.headerRecord["DeliveryAddress3"]);
+    setDeliveryAddress4(location.state.headerRecord["DeliveryAddress4"]);
+    setDeliveryCity(location.state.headerRecord["DeliveryCity"]);
+    setDeliveryState(location.state.headerRecord["DeliveryState"]);
+    setDeliveryZip(location.state.headerRecord["DeliveryZip"]);
+    setPhone(location.state.headerRecord["Phone"]);
+    setEmail(location.state.headerRecord["Email"]);
+    setPrincipalOfficer(location.state.headerRecord["PrincipalOfficer"]);
+    setPrincipalOfficerTitle(location.state.headerRecord["PrincipalOfficerTitle"]);
+    setPrincipalCell(location.state.headerRecord["PrincipalCell"]);
+    setPrincipalEmail(location.state.headerRecord["PrincipalEmail"]);
+    setBillingAddress(location.state.headerRecord["BillingAddress"]);
+    setBillingState(location.state.headerRecord["BillingState"]);
+    setBillingCity(location.state.headerRecord["BillingCity"]);
+    setBillingZip(location.state.headerRecord["BillingZip"]);
+
+    setFederalTaxID(location.state.headerRecord["FederalTaxID"]);
+    setResaleCertificateNumber(location.state.headerRecord["ResaleCertificateNumber"]);
+    setCompanyType(location.state.headerRecord["CompanyType"]);
+    setNatureOfBusiness(location.state.headerRecord["NatureOfBusiness"]);
+    console.log("location.state.headerRecord['EstablishedYear'].split('-'): " + location.state.headerRecord["EstablishedYear"].split("-"))
+
+    if (location.state.headerRecord["EstablishedYear"]!=='' && location.state.headerRecord["EstablishedYear"].length>0)
+    {
+      onSelectEstablishYear(location.state.headerRecord["EstablishedYear"].split("-")[0]);
+      onSelectEstablishMonth(location.state.headerRecord["EstablishedYear"].split("-")[1]);
+    }
+    else
+    {
+      setEstablishedYear('');
+      setSelectedYear('');
+      setSelectedMonth('');
+    }
+    //setEstablishedYear(location.state.headerRecord["EstablishedYear"]);
+    setStateIncorporated(location.state.headerRecord["StateIncorporated"]);
+    setTaxExempt(location.state.headerRecord["TaxExempt"]);
+    setPORequired(location.state.headerRecord["PORequired"]);
+    setAlreadyHasFBAccount(location.state.headerRecord["AlreadyHasFBAccount"]);
+    setFBAccount(location.state.headerRecord["FBAccount"]);
+  }
+}, [location]);
+
 function removeBodyCss() {
   document.body.classList.add("no_padding")
 }
@@ -555,14 +626,29 @@ function getRequestData()
   };
 
   //Company Information
+  addCustomerRequest.CompanyInfo.CustomerID = CustomerID;
+  addCustomerRequest.CompanyInfo.CustomerJDE = ""; //TODO
+  addCustomerRequest.CompanyInfo.fb1Status = "COMPLETED"; //TODO
+
   addCustomerRequest.CompanyInfo.CompanyType = CompanyType;
   addCustomerRequest.CompanyInfo.DUNSNumber = DUNSNumber;
-  addCustomerRequest.CompanyInfo.Name = Name;
+  addCustomerRequest.CompanyInfo.Name = Name; //TODO remove
+  addCustomerRequest.CompanyInfo.CustomerName = Name;
   addCustomerRequest.CompanyInfo.DBAName = DBAName;
   addCustomerRequest.CompanyInfo.Phone = Phone;
   addCustomerRequest.CompanyInfo.Email = Email;
 
-  addCustomerRequest.CompanyInfo.DeliveryAddress = DeliveryAddress;
+  addCustomerRequest.CompanyInfo.OwnerName = ""; //TODO
+  addCustomerRequest.CompanyInfo.Fax = ""; //TODO
+  addCustomerRequest.CompanyInfo.County = ""; //TODO
+  addCustomerRequest.CompanyInfo.TaxGroup = ""; //TODO
+
+  addCustomerRequest.CompanyInfo.DeliveryAddress = DeliveryAddress1; //TODO remove
+  addCustomerRequest.CompanyInfo.DeliveryAddress1 = DeliveryAddress1;
+  addCustomerRequest.CompanyInfo.DeliveryAddress2 = DeliveryAddress2;
+  addCustomerRequest.CompanyInfo.DeliveryAddress3 = DeliveryAddress3;
+  addCustomerRequest.CompanyInfo.DeliveryAddress4 = DeliveryAddress4;
+
   addCustomerRequest.CompanyInfo.DeliveryCity = DeliveryCity;
   addCustomerRequest.CompanyInfo.DeliveryState = DeliveryState;
   addCustomerRequest.CompanyInfo.DeliveryZip = DeliveryZip;
@@ -577,7 +663,7 @@ function getRequestData()
   }
   else
   {
-    addCustomerRequest.CompanyInfo.BillingAddress = DeliveryAddress;
+    addCustomerRequest.CompanyInfo.BillingAddress = DeliveryAddress1;
     addCustomerRequest.CompanyInfo.BillingCity = DeliveryCity;
     addCustomerRequest.CompanyInfo.BillingState = DeliveryState;
     addCustomerRequest.CompanyInfo.BillingZip = DeliveryZip;
@@ -587,6 +673,8 @@ function getRequestData()
   addCustomerRequest.CompanyInfo.NatureOfBusiness = NatureOfBusiness;
   addCustomerRequest.CompanyInfo.PrincipalOfficer = PrincipalOfficer;
   addCustomerRequest.CompanyInfo.PrincipalOfficerTitle = PrincipalOfficerTitle;
+  addCustomerRequest.CompanyInfo.PrincipalCell = PrincipalCell;
+  addCustomerRequest.CompanyInfo.PrincipalEmail = PrincipalEmail;
   addCustomerRequest.CompanyInfo.EstablishedYear = EstablishedYear;
   addCustomerRequest.CompanyInfo.StateIncorporated = StateIncorporated;
   addCustomerRequest.CompanyInfo.FederalTaxID = FederalTaxID;
@@ -1389,21 +1477,6 @@ const onChangeEstablishedYear = (value) => {
       { CompanyName: '', AccountID: '', Phone: '', EmailID: '' }
     ]);
   }
-
-  /*
-  if (mDiff >= 12) {
-    setInputFields([
-      { CompanyName: '', AccountID: '', Phone: '', EmailID: '' },
-      { CompanyName: '', AccountID: '', Phone: '', EmailID: '' },
-      { CompanyName: '', AccountID: '', Phone: '', EmailID: '' }
-    ]);
-  }
-  else {
-    setInputFields([
-      { CompanyName: '', AccountID: '', Phone: '', EmailID: '' },
-    ]);
-  }
-  */
   
   if(isDebug){
     console.log("onChangeEstablishedYear: currDate - " + currDate);
@@ -1435,18 +1508,6 @@ function onClickShowSSN(){
 
 const onChangePGSSN = (values, sourceInfo) => {
 
-  /*
-  hideAnElement("invalidSSN");
-  console.log("onChangePGSSN - values.value" + values.value);
-  console.log(values);
-  console.log("onChangePGSSN - sourceInfo");
-  console.log(sourceInfo);
-  console.log("onChangePGSSN - showSSNField");
-  console.log(showSSNField);
-  console.log("onChangePGSSN - maskSSNField");
-  console.log(maskSSNField);
-  */
-
   setPGSSN(values.value);
 
   if(values.value.length !== 9)
@@ -1469,13 +1530,18 @@ const monthsDiff = (d1, d2) => {
 const resetCompanyInfoTab = () => { //First Tab
 
   //Company Information (First Tab)
+  setCustomerID("");
   setCompanyType("Corp");
   setDUNSNumber("");
   setName("");
   setDBAName("");
   setPhone("");
   setEmail("");
-  setDeliveryAddress("");
+  setDeliveryAddress(""); //TODO - remove
+  setDeliveryAddress1("");
+  setDeliveryAddress2("");
+  setDeliveryAddress3("");
+  setDeliveryAddress4("");
   setDeliveryCity("");
   setDeliveryState("");
   setDeliveryZip("");
@@ -1487,6 +1553,8 @@ const resetCompanyInfoTab = () => { //First Tab
   setNatureOfBusiness("");
   setPrincipalOfficer("");
   setPrincipalOfficerTitle("");
+  setPrincipalCell("");
+  setPrincipalEmail("");
   setEstablishedYear("");
   setStateIncorporated("");
   setFederalTaxID("");
@@ -1585,6 +1653,10 @@ const onClickRestApiSuccess = event => {
   form2 && form2.reset();
   form3 && form3.reset();
   form4 && form4.reset();
+
+  setHeaderRecord(null);
+  setRecordMode("create");
+  setCustomerID("");
 
   resetCompanyInfoTab();
   resetTradeBankRefTab();
@@ -1782,7 +1854,7 @@ return (
                       >
                         <TabPane tabId={1}>
                           {/*first tab - starts*/}
-          <AvForm  className="needs-validation" onInvalidSubmit={handleValidationFailed} onValidSubmit={handleFirstTabNextButton} ref={c => {form1 = c}}>
+          <AvForm  className="needs-validation" onInvalidSubmit={handleValidationFailed} onValidSubmit={handleFirstTabNextButton} ref={c => {form1 = c}} disabled={(recordMode==="readonly")?true:false}>
             <Row>
               <p className="card-title-desc">Required fields are noted with <code>*</code></p>
               <Col md="6">
@@ -1901,23 +1973,92 @@ return (
                 />
           		</FormGroup>
 	            </Col>
-	          </Row>
-	          <div className="row">
-            <div className="col-lg-6">
-              <div className="mb-3">
-                <label htmlFor="DeliveryAddresss">Delivery Address<code>*</code></label>
-                <AvField
-                name="DeliveryAddress"
-                type="text"
-                errorMessage="Enter Delivery Address"
-                className="form-control"
-                validate={{ required: { value: true } }}
-                id="DeliveryAddresss"
-                value={DeliveryAddress}
-                onChange={e => {setDeliveryAddress(e.target.value)}}
-                />
+              </Row>
+              <div className="row">
+                <div className="col-lg-6">
+                  <div className="mb-3">
+                    <label htmlFor="DeliveryAddress1">Delivery Address1<code>*</code></label>
+                    <AvField
+                    name="DeliveryAddress1"
+                    type="text"
+                    errorMessage="Enter Delivery Address1"
+                    className="form-control"
+                    validate={{ required: { value: true } }}
+                    id="DeliveryAddress1"
+                    value={DeliveryAddress1}
+                    onChange={e => {setDeliveryAddress1(e.target.value)}}
+                    />
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="mb-3">
+                    <label htmlFor="DeliveryAddress2">Address2</label>
+                    <AvField
+                    name="DeliveryAddress2"
+                    type="text"
+                    errorMessage="Enter Delivery Address2"
+                    className="form-control"
+                    validate={{ required: { value: false } }}
+                    id="DeliveryAddress2"
+                    value={DeliveryAddress2}
+                    onChange={e => {setDeliveryAddress2(e.target.value)}}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+
+              <div className="row">
+                <div className="col-lg-6">
+                  <div className="mb-3">
+                    <label htmlFor="DeliveryAddress3">Address3</label>
+                    <AvField
+                    name="DeliveryAddress3"
+                    type="text"
+                    errorMessage="Enter Delivery Address3"
+                    className="form-control"
+                    validate={{ required: { value: false } }}
+                    id="DeliveryAddress3"
+                    value={DeliveryAddress3}
+                    onChange={e => {setDeliveryAddress3(e.target.value)}}
+                    />
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="mb-3">
+                    <label htmlFor="DeliveryAddress4">Address4</label>
+                    <AvField
+                    name="DeliveryAddress4"
+                    type="text"
+                    errorMessage="Enter Delivery Address4"
+                    className="form-control"
+                    validate={{ required: { value: false } }}
+                    id="DeliveryAddress4"
+                    value={DeliveryAddress4}
+                    onChange={e => {setDeliveryAddress4(e.target.value)}}
+                    />
+                  </div>
+                </div>
+              </div>
+
+                  
+              <div className="row">
+                              {/*
+              <div className="col-lg-6">
+                <div className="mb-3">
+                  <label htmlFor="DeliveryAddresss">Delivery Address<code>*</code></label>
+                  <AvField
+                  name="DeliveryAddress"
+                  type="text"
+                  errorMessage="Enter Delivery Address"
+                  className="form-control"
+                  validate={{ required: { value: true } }}
+                  id="DeliveryAddresss"
+                  value={DeliveryAddress}
+                  onChange={e => {setDeliveryAddress(e.target.value)}}
+                  />
+                </div>
+              </div>
+              */}
             <div className="col-lg-6">
               <div className="mb-3">
                 <label htmlFor="DeliveryCity">Delivery City<code>*</code></label>
@@ -1933,8 +2074,7 @@ return (
                 />
               </div>
             </div>
-          </div>
-          <div className="row">
+                              
             <div className="col-lg-6">
               <div className="mb-3">
                 <Label htmlFor="DeliveryState">Delivery State<code>*</code></Label>
@@ -1954,6 +2094,9 @@ return (
 		            </AvField>
               </div>
             </div>
+          </div>
+          <div className="row">
+            
             <div className="col-lg-6">
               <div className="mb-3">
                 <label htmlFor="DeliveryZip">Delivery Zip Code<code>*</code></label>
@@ -2090,6 +2233,53 @@ return (
                   />
                 </FormGroup>
               </Col>
+
+              <Col md="6">
+                <Row>
+                  <Col md={6}>
+                    <div className="mb-3">
+                      <Label htmlFor="selectedYear">Business established - Year<code>*</code></Label>
+                      <AvField 
+                        id="selectedYear"
+                        type="select"  
+                        name="selectedYear"
+                        className="form-control"
+                        errorMessage="Please Select Year"
+                        validate={{ required: { value: true}}}
+                        value={selectedYear} 
+                        onChange={e => {onSelectEstablishYear(e.target.value)}}
+                        >
+                          {yearsList.map((element) => 
+                        <option key={element.masterCode} value={element.masterCode}>{element.masterDesc}</option>
+                        )}
+                      </AvField>
+                    </div>
+                  </Col>
+                  <Col md={6}>
+                    <div className="mb-3">
+                    <Label htmlFor="selectedMonth">Month<code>*</code></Label>
+                      <AvField 
+                        id="selectedMonth"
+                        type="select"  
+                        name="selectedMonth"
+                        className="form-control"
+                        errorMessage="Please Select Month"
+                        validate={{ required: { value: true}}}
+                        value={selectedMonth} 
+                        onChange={e => {onSelectEstablishMonth(e.target.value)}}
+                        disabled={(selectedYear !== "" && selectedYear.length>0)?false:true}
+                        >
+                          {monthsList.map((element) => 
+                        <option key={element.masterCode} value={element.masterCode}>{element.masterDesc}</option>
+                        )}
+                      </AvField>
+                    </div>
+                  </Col>
+                </Row>
+              </Col>
+	          </Row>
+
+            <Row>
               <Col md="6">
                 <FormGroup className="mb-3">
                   <Label htmlFor="PrincipalOfficer">Principal Officer Name<code>*</code></Label>
@@ -2105,10 +2295,7 @@ return (
                   />
                 </FormGroup>
               </Col>
-	          </Row>
 
-            <Row>
-              
               <Col md="6">
                 <FormGroup className="mb-3">
                   <Label htmlFor="PrincipalOfficerTitle">Principal Officer Title<code>*</code></Label>
@@ -2124,53 +2311,44 @@ return (
                     />
                 </FormGroup>
               </Col>
+              
+            </Row>
+                            
+            <Row>
+              <Col md="6">
+                <FormGroup className="mb-3">
+                  <Label htmlFor="PrincipalCell">Principal Cell<code>*</code></Label>
+                  <AvField
+                  name="PrincipalCell"
+                  type="text"
+                  errorMessage="Enter Principal Cell no."
+                  className="form-control"
+                  validate={{ required: { value: true }}}
+                  id="PrincipalCell"
+                  value={PrincipalCell}
+                  onChange={e => {setPrincipalCell(e.target.value)}}
+                  />
+                </FormGroup>
+              </Col>
 
               <Col md="6">
-
-                  <Row>
-                    <Col md={6}>
-                      <div className="mb-3">
-                        <Label htmlFor="selectedYear">Business established - Year<code>*</code></Label>
-                        <AvField 
-                          id="selectedYear"
-                          type="select"  
-                          name="selectedYear"
-                          className="form-control"
-                          errorMessage="Please Select Year"
-                          validate={{ required: { value: true}}}
-                          value={selectedYear} 
-                          onChange={e => {onSelectEstablishYear(e.target.value)}}
-                          >
-                            {yearsList.map((element) => 
-                          <option key={element.masterCode} value={element.masterCode}>{element.masterDesc}</option>
-                          )}
-                        </AvField>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="mb-3">
-                      <Label htmlFor="selectedMonth">Month<code>*</code></Label>
-                        <AvField 
-                          id="selectedMonth"
-                          type="select"  
-                          name="selectedMonth"
-                          className="form-control"
-                          errorMessage="Please Select Month"
-                          validate={{ required: { value: true}}}
-                          value={selectedMonth} 
-                          onChange={e => {onSelectEstablishMonth(e.target.value)}}
-                          disabled={(selectedYear !== "" && selectedYear.length>0)?false:true}
-                          >
-                            {monthsList.map((element) => 
-                          <option key={element.masterCode} value={element.masterCode}>{element.masterDesc}</option>
-                          )}
-                        </AvField>
-                      </div>
-                    </Col>
-                  </Row>
-
+                <FormGroup className="mb-3">
+                  <Label htmlFor="PrincipalEmail">Principal Email<code>*</code></Label>
+                  <AvField
+                    name="PrincipalEmail"
+                    type="email"
+                    errorMessage="Enter Principal email"
+                    className="form-control"
+                    validate={{ required: { value: true }}}
+                    id="PrincipalEmail"
+                    value={PrincipalEmail}
+                    onChange={e => {setPrincipalEmail(e.target.value)}}
+                    />
+                </FormGroup>
               </Col>
-	          </Row>
+                            
+              
+            </Row>
 
             <Row>
               <Col md="6">
@@ -2418,12 +2596,26 @@ return (
 
           <button id="hiddenSubmit" type="submit" hidden>Submit</button>
           </AvForm>
+          <Row>
+            <Col lg="2">
+              <br/>
+              <button
+                hidden={(headerRecord) ? false : true}
+                type="button"
+                value="addfb1account"
+                className="btn btn-success waves-effect waves-light"
+                onClick={e => onClickRestApiSuccess ()}
+                ><i className="uil-book-alt"></i>&nbsp;
+                NEW FB1 ACCOUNT
+              </button>                 
+            </Col>
+          </Row>
           {/*first tab - ends*/}
           </TabPane>
           <TabPane tabId={2}>
           <CardTitle className="h4">TRADE REFERENCES - Food Service related preffered <code>(Required if requesting payment terms)</code>
           </CardTitle><br/>
-          <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedSecondTab} onValidSubmit={handleSecondTabNextButton} ref={c => {form2 = c}}>
+          <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedSecondTab} onValidSubmit={handleSecondTabNextButton} ref={c => {form2 = c}} disabled={(recordMode==="readonly")?true:false}>
                             {/*second tab - begins*/}
             <Row id="divBankRefDocument" hidden={CompanyType==="Corp"?false:true}>
               <Col md="6">
@@ -2707,7 +2899,7 @@ return (
           </TabPane>
 
           <TabPane tabId={3}>
-            <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedThirdTab} onValidSubmit={handleThirdTabNextButton} ref={c => {form3 = c}}>
+            <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedThirdTab} onValidSubmit={handleThirdTabNextButton} ref={c => {form3 = c}} disabled={(recordMode==="readonly")?true:false}>
 
               <Row>
                 <CardTitle className="h4">Personal Guarantee / Authorization <code>(Required if in business &lt; 1 year and requesting Payment Terms &/or equipment to be assigned at place of business)</code></CardTitle>
@@ -3084,7 +3276,7 @@ return (
 
           <TabPane tabId={4}>
             {/*fourth tab - begins*/}
-            <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedFourthTab} onValidSubmit={handleFourthTabFinishButton} ref={c => {form4 = c}}>
+            <AvForm className="needs-validation" onInvalidSubmit={handleValidationFailedFourthTab} onValidSubmit={handleFourthTabFinishButton} ref={c => {form4 = c}} disabled={(recordMode==="readonly")?true:false}>
 
               <Row>
                 <p>Should the account default from its payment obligations, Farmer Bros Co reserves the right to terminate credit terms and delivery of products without further notice. Customer hereby agrees to pay all cost associated with the collection of past due invoices and recovery of assets, including interest and legal fees.</p>
@@ -3309,16 +3501,31 @@ return (
                             switch(activeTab)
                             {
                               case 1://we have field validations on this tab
-                                document.getElementById("hiddenSubmit").click();
+                                if (recordMode !== "readonly")
+                                  document.getElementById("hiddenSubmit").click();
+                                else if (recordMode === "readonly")
+                                  toggleTab(2);
                                 break;
                               case 2://we have field validations on this tab
-                                document.getElementById("hiddenSubmitSecondTab").click();
+                                if (recordMode !== "readonly")
+                                  document.getElementById("hiddenSubmitSecondTab").click();
+                                else if (recordMode === "readonly")
+                                  if(showPGTab === true)
+                                    toggleTab(3);
+                                  else
+                                    toggleTab(4);
                                 break;
                               case 3://we have field validations on this tab
-                                document.getElementById("hiddenSubmitThirdTab").click();
+                                if (recordMode !== "readonly")
+                                  document.getElementById("hiddenSubmitThirdTab").click();
+                                else if (recordMode === "readonly")
+                                  toggleTab(4);
                                 break;
                               case 4://we have field validations on this tab
-                                document.getElementById("hiddenSubmitFourthTab").click();
+                                if (recordMode !== "readonly")
+                                  document.getElementById("hiddenSubmitFourthTab").click();
+                                else if (recordMode === "readonly")
+                                  showAlert("warning", "It's Read-only Record", "");
                                 break;
                               default:
                                 break;

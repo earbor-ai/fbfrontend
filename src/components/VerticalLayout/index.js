@@ -45,7 +45,13 @@ class Layout extends Component {
 
     // Scroll Top to 0
     window.scrollTo(0, 0);
-    let currentage = this.capitalizeFirstLetter(this.props.location.pathname);   
+    let currentage = this.capitalizeFirstLetter(this.props.location.pathname);
+    if (currentage === "Accountapplication")
+      currentage="Account Application (FB1)"
+
+    if (currentage === "Pricelist")
+      currentage="Price List"
+
 
     document.title =
       currentage + " | Farmer Brothers";

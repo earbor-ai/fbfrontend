@@ -371,7 +371,7 @@ const NewAccountPricingTool = () => {
         calculateItemForm && calculateItemForm.reset();
 
         setInnerHTML("itemNoLbl", "Item #<code>*</code>");
-        //setAcctName("");
+        setAcctName("");
         setItemNo("");
         setDescription("");
         setPriceGroup("");
@@ -495,12 +495,11 @@ const NewAccountPricingTool = () => {
               console.log("execMasterDataRequest: data");
               console.log(data);
             }
-                        
-          //  let strData =JSON.stringify(data);           
-            let jsonResult= JSON.parse(data);            
-            console.log("JSON RESULT: "+jsonResult);
+    
+            /*let strData =JSON.stringify(data);
+            let jsonResult= JSON.parse(strData);*/
             
-            //let jsonResult= JSON.parse(data);
+            let jsonResult= JSON.parse(data);
             let restApiResult = jsonResult.result; 
             
             let masterData = jsonResult.data;

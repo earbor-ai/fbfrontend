@@ -1,5 +1,5 @@
 import PropTypes from "prop-types"
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 // //Import Scrollbar
 import SimpleBar from "simplebar-react"
@@ -15,6 +15,7 @@ import { withTranslation } from "react-i18next"
 const SidebarContent = props => {
   const ref = useRef();
 
+  const [linkPathName, setLinkPathName] = useState(""); 
   const activateParentDropdown = useCallback((item) => {
     item.classList.add("active")
     const parent = item.parentElement
@@ -57,6 +58,7 @@ const SidebarContent = props => {
   useEffect(() => {
     const pathName = props.location.pathname
 
+    setLinkPathName(pathName);
     new MetisMenu("#side-menu")
     let matchingMenuItem = null
     const ul = document.getElementById("side-menu")
@@ -104,14 +106,30 @@ const SidebarContent = props => {
             </li>
             
             <li className="menu-title">{props.t("New Account Request")}</li>
+            {/* Start */}
+              <li className={linkPathName.search("accountapplication")>-1?"mm-active":""}>
+                <Link to="/accountapplication" className=" waves-effect">
+                  <i className="uil-focus-add"></i>
+                  <span>{props.t("Credit Application (FB1)")}</span>
+                </Link>
+              </li>
 
+              <li className={linkPathName.search("narf")>-1?"mm-active":""}>
+                <Link to="/narf" className=" waves-effect">
+                  <i className="uil-book-alt"></i>
+                  <span>{props.t("NARF")}</span>
+                </Link>
+              </li>            
+            
+            {/*
             <li>
               <Link to="/accountapplication" className=" waves-effect">
                 <i className="uil-focus-add"></i>
-                <span>{props.t("Credit  Application (FB1)")}</span>
+                <span>{props.t("Credit Application (FB1)")}</span>
               </Link>
             </li>                   
-            
+            */}
+
             <li>
               <Link to="/calendar" className=" waves-effect">
                 <i className="uil-book-alt"></i>
@@ -170,9 +188,16 @@ const SidebarContent = props => {
 
             <li className="menu-title">{props.t("Pricing Tools")}</li>
 
-            <li>
-              <Link to="/newaccountpt" className=" waves-effect">
+            {/*<li>
+              <Link to="/#" className=" waves-effect">
                 <i className="uil-book-alt"></i>
+                <span>{props.t("New Account")}</span>
+              </Link>
+            </li>
+          */}
+          <li className={linkPathName.search("newaccountpt")>-1?"mm-active":""}>
+              <Link to="/newaccountpt" className=" waves-effect">
+                <i className="uil-book-open"></i>
                 <span>{props.t("New Account")}</span>
               </Link>
             </li>
@@ -184,12 +209,19 @@ const SidebarContent = props => {
               </Link>
             </li>
 
-            <li>
+            {/*<li>
               <Link to="/pricelist" className=" waves-effect">
                 <i className="uil-book-alt"></i>
                 <span>{props.t("Price List")}</span>
               </Link>
             </li>
+        */}
+            <li className={linkPathName.search("pricelist")>-1?"mm-active":""}>
+                  <Link to="/pricelist" className=" waves-effect">
+                    <i className="uil-book-alt"></i>
+                    <span>{props.t("Price List")}</span>
+                  </Link>
+              </li> 
 
             {/*<li>
               <Link to="/#" className="waves-effect">

@@ -1,23 +1,14 @@
-import React, { useState, useEffect, Fragment, } from "react"
-import InputMask from 'react-input-mask';
-import { baseUrl } from "../FBLibrary/fbglobals"
+import React, { useState, useEffect} from "react"
 
-import {
+import { 
   Card,
   CardBody,
   CardTitle,
   CardSubtitle,
   Col,
-  Container,
-  Form,
   FormGroup,
-  Input,
   Label,
-  NavItem,
-  NavLink,
   Row,
-  TabContent,
-  TabPane,
   Button,
   Spinner,
 
@@ -40,8 +31,7 @@ import SweetAlert from "react-bootstrap-sweetalert"
 import $ from 'jquery';
 
 import { Prompt } from 'react-router-dom'
-
-import ReactDOM from "react-dom";
+import { baseUrl } from "../FBLibrary/fbglobals"
 
 const NewMDBDataTable = (props) =>{
   var tableData = {columns:props.cols, rows:props.rows};
@@ -67,12 +57,10 @@ const NewMDBDataTable = (props) =>{
 
 const PriceList = () => {
 
-  const ref = React.createRef();
+  //const baseUrl = 'http://courage.co.in/testrestapi/index.php'
+  //const baseUrl = 'https://fbnarf.mktalt.com/pub';
+  //const baseUrl = 'http://localhost:19391';
 
- //const baseUrl = 'http://courage.co.in/testrestapi/index.php'
- //const baseUrl = 'https://fbnarf.mktalt.com/pub';
- //const baseUrl = 'http://localhost:19391';
- 
   const isDebug = true;
   
   const fileName = 'pricelist'  
@@ -215,20 +203,14 @@ const PriceList = () => {
   const [alertTitle, setAlertTitle] = useState("Error");
   const [alertMsg, setAlertMsg] = useState("");
 
-  const alertUser = e => {
-    console.log("alertUser");
-    console.log(e);
-    const msg = "Are you sure to refresh/reload page?"
-    e.preventDefault();
-    e.returnValue = '';
-  }
-
   var searchForm = null;
 
   useEffect(() => {
-    //window.addEventListener('beforeunload', alertUser)
+  
     if(isDebug)
       console.log("useEffect: Begin");
+
+    document.title = "Price List | Farmer Brothers";
     
     let arr1 = priceLevelStartList;
     let arr2 = range(1, 60);
@@ -239,35 +221,9 @@ const PriceList = () => {
     if(isDebug)
       console.log("useEffect: End");
 
-    /*return () => {
-      window.removeEventListener('beforeunload', alertUser)
-    }*/
-    
-
   }, []);
 
   useEffect(() => {
-    /*
-    setTimeout(()=>{
-      console.log("useEffect - setTimeout");
-      var table = $('#datatable-buttons').DataTable();
-      if(table){
-        console.log("useEffect - setTimeout - if(table)");
-        $("#datatable-buttons").DataTable({
-          destroy: true,
-          dom: "rBftlip",
-          buttons: [
-            'copy', 'csv', 'excel', 'pdf',
-          ],
-          lengthMenu: [
-            [10, 15, 20, 50, 100, -1],
-            [10, 15, 20, 50, 100, "All"],
-          ],
-          pageLength: 12,
-        });
-      }
-    },1000)
-    */
 
     setTimeout(()=>{
       console.log("useEffect - setTimeout");
@@ -315,12 +271,9 @@ const PriceList = () => {
       value = parseInt(value);
       
       console.log("onChangePriceLevelStart: value - " + value + "; type of " + typeof(value));
-      //let arr1 = ["Select Price Level End", ];
       let arr2 = range(value+1, 60);
       if(value < 60)
         setPriceLevelEndList([...arr2]);
-      //else
-      //  setPriceLevelEndList(["Select Price Level End", ]);
     }
     else{
       setPriceLevelStart("");
@@ -586,10 +539,10 @@ const PriceList = () => {
           console.log(data);
         }
 
-        //let strData =JSON.stringify(data);
-        let jsonResult= JSON.parse(data);
+        /*let strData =JSON.stringify(data);
+        let jsonResult= JSON.parse(strData);*/
         
-        //let jsonResult= JSON.parse(data);
+        let jsonResult= JSON.parse(data);
         let restApiResult = jsonResult.result; 
         
         let masterData = jsonResult.data;
@@ -690,10 +643,10 @@ const PriceList = () => {
 
         //applicationId = data.data.ApplicationId;
   
-        //let strData =JSON.stringify(data);
-        let jsonResult= JSON.parse(data);
+        /*let strData =JSON.stringify(data);
+        let jsonResult= JSON.parse(strData);*/
         
-        //let jsonResult= JSON.parse(data);
+        let jsonResult= JSON.parse(data);
         let restApiResult = jsonResult.result; 
         
         let searchData = jsonResult.data;
@@ -1240,7 +1193,7 @@ const PriceList = () => {
                             >
                               <option value="">Select Price Level Start</option>
                               {priceLevelStartList.map((element) => 
-                              <option value={element}>{element}</option>
+                              <option key={element} value={element}>{element}</option>
                               )}
                             </AvField>
                           </div>
@@ -1264,7 +1217,7 @@ const PriceList = () => {
                             >
                               <option value="">Select Price Level End</option>
                               {priceLevelEndList.map((element) => 
-                              <option value={element}>{element}</option>
+                              <option key={element} value={element}>{element}</option>
                               )}
                             </AvField>
                           </div>
