@@ -27,6 +27,7 @@ import {
   NARFSearchTypeListNTL,
   NARFSearchTypeListDSD,
   usStates,
+  usZipCodeMinLen,
   validateObject,
 } from "../FBLibrary/fbglobals"
 
@@ -613,7 +614,12 @@ export const CustomerInformation = (props) => {
               type="text"
               errorMessage="Enter Zip Code"
               className="form-control"
-              validate={{ required: { value: true } }}
+              validate={{
+                required: { value: true },
+                pattern: {value: '^[0-9]+$'},
+                minLength: {value: usZipCodeMinLen},
+                maxLength: {value: usZipCodeMinLen}
+              }}
               id="zipCode"
               value={props.zipCodeValue}
               onChange={e => {props.zipCodeOnchange(e.target.value)}}

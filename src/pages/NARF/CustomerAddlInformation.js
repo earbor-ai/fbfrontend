@@ -992,7 +992,7 @@ export const CustomerAddlInformation = (props) => {
                     </div>
                       {/*</FormGroup>*/}
                 </Col>
-                    <Col lg="1">
+                    <Col lg="1" hidden={(props.recordMode==="readonly")?true:false}>
                       <FormGroup className="mb-3">
                         <button
                           id={"action" + index}
@@ -1096,7 +1096,7 @@ export const CustomerAddlInformation = (props) => {
                   </FormGroup>
                 </Col>
 
-                <Col lg="1">
+                <Col lg="1" hidden={(props.recordMode==="readonly")?true:false}>
                   <FormGroup className="mb-3">
                     <button
                       id={"action" + index}
@@ -1203,7 +1203,7 @@ export const CustomerAddlInformation = (props) => {
                   </FormGroup>
                 </Col>
 
-                <Col lg="1">
+                <Col lg="1" hidden={(props.recordMode==="readonly")?true:false}>
                   <FormGroup className="mb-3">
                     <button
                       id={"action" + index}

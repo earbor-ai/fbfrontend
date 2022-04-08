@@ -115,6 +115,9 @@ const AccountApplication = () => {
   const isDebug = true;
   const location = useLocation();
 
+  var headerRecord = null;
+  var detailRecord = null;
+
   const usStates= [
     {
       "masterCode": "","masterDesc": "Select State"
@@ -293,6 +296,14 @@ const AccountApplication = () => {
     return(rDateStr) //returns date string in yyyy-mm
   }
 
+  const setHeaderRecord = (v) => {
+    headerRecord = v;
+  }
+
+  const setDetailRecord = (v) => {
+    detailRecord = v;
+  }
+
   const getYearsList = () => {
     var lst = [{masterCode:"", masterDesc:"Year"}];
     var cdate = new Date();
@@ -330,7 +341,8 @@ const [alertMsg, setAlertMsg] = useState("");
 
 //form field state variables below
 
-const [headerRecord, setHeaderRecord] = useState(null);
+//const [headerRecord, setHeaderRecord] = useState(null);
+//const [detailRecord, setDetailRecord] = useState(null);
 const [recordMode, setRecordMode] = useState("create"); //create-edit-readonly
 const [CustomerID, setCustomerID] = useState("");
   
@@ -435,7 +447,7 @@ const [yearsList, setYearsList] = useState(getYearsList());
 const [monthsList, setMonthsList] = useState([]);
 const [selectedYear, setSelectedYear] = useState("");
 const [selectedMonth, setSelectedMonth] = useState("");
-  const [establishAgeInMonths, setEstablishAgeInMonths] = useState(0);
+const [establishAgeInMonths, setEstablishAgeInMonths] = useState(0);
 
 const [validation, setValidation] = useState({
   EstablishedYear: null,
@@ -481,8 +493,15 @@ const onSelectEstablishYear = (value) => {
 }
 
 const onSelectEstablishMonth = (value) => {
-  if(value !== "" && value.length > 0){
+  if (value !== "" && value.length > 0) {
     let s = selectedYear + "-" + value;
+    if (selectedYear === "") { //specific case
+      if (headerRecord && (detailRecord === null || detailRecord)) {
+        if(headerRecord["EstablishedYear"] && headerRecord["EstablishedYear"].length >=7)
+          s = headerRecord["EstablishedYear"]; //e.g. 2022-01
+      }
+    }
+    
     setSelectedMonth(value);
     //setEstablishedYear(s);
     onChangeEstablishedYear(s);
@@ -525,17 +544,28 @@ useEffect(() => {
     setPrincipalOfficerTitle(location.state.headerRecord["PrincipalOfficerTitle"]);
     setPrincipalCell(location.state.headerRecord["PrincipalCell"]);
     setPrincipalEmail(location.state.headerRecord["PrincipalEmail"]);
+
+    if (location.state.headerRecord["baidtda"] && location.state.headerRecord["baidtda"].length > 0) {
+      if (location.state.headerRecord["baidtda"].toLowerCase() === "true") {
+        setDifferentDeliveryAndBillingAddress(true);
+      }
+      else {
+        setDifferentDeliveryAndBillingAddress(false);
+      }
+    }
+
     setBillingAddress(location.state.headerRecord["BillingAddress"]);
     setBillingState(location.state.headerRecord["BillingState"]);
     setBillingCity(location.state.headerRecord["BillingCity"]);
     setBillingZip(location.state.headerRecord["BillingZip"]);
 
+
+
     setFederalTaxID(location.state.headerRecord["FederalTaxID"]);
     setResaleCertificateNumber(location.state.headerRecord["ResaleCertificateNumber"]);
     setCompanyType(location.state.headerRecord["CompanyType"]);
     setNatureOfBusiness(location.state.headerRecord["NatureOfBusiness"]);
-    console.log("location.state.headerRecord['EstablishedYear'].split('-'): " + location.state.headerRecord["EstablishedYear"].split("-"))
-
+    console.log("location.state.headerRecord['EstablishedYear'].split('-'): " + location.state.headerRecord["EstablishedYear"].split("-"));
     if (location.state.headerRecord["EstablishedYear"]!=='' && location.state.headerRecord["EstablishedYear"].length>0)
     {
       onSelectEstablishYear(location.state.headerRecord["EstablishedYear"].split("-")[0]);
@@ -553,6 +583,61 @@ useEffect(() => {
     setPORequired(location.state.headerRecord["PORequired"]);
     setAlreadyHasFBAccount(location.state.headerRecord["AlreadyHasFBAccount"]);
     setFBAccount(location.state.headerRecord["FBAccount"]);
+  }
+
+  if (location.state && location.state.detailRecord) {
+    setDetailRecord(JSON.parse(JSON.stringify(location.state.detailRecord)));
+    setAccountPayableContact(location.state.detailRecord["AccountPayableContact"]);
+    setAccountPayableTitle(location.state.detailRecord["AccountPayableTitle"]);
+    setAccountPayableEmail(location.state.detailRecord["AccountPayableEmail"]);
+    setAccountPayablePhone(location.state.detailRecord["AccountPayablePhone"]);
+    setBankAccountNo(location.state.detailRecord["AccountNo"]);
+    setBankName(location.state.detailRecord["BankName"]);
+    setBankAddress(location.state.detailRecord["BankAddress"]);
+    setBankCity(location.state.detailRecord["BankCity"]);
+    setBankEmailID(location.state.detailRecord["BankEmailID"]);
+    setBankPhone(location.state.detailRecord["BankPhone"]);
+    setBankState(location.state.detailRecord["BankState"]);
+    setBankZip(location.state.detailRecord["BankZip"]);
+    setSecondaryAccountPayableContact(location.state.detailRecord["SecondaryAccountPayableContact"]);
+    setSecondaryAccountPayableTitle(location.state.detailRecord["SecondaryAccountPayableTitle"]);
+    setSecondaryAccountPayablePhone(location.state.detailRecord["SecondaryAccountPayablePhone"]);
+    setSecondaryAccountPayableEmail(location.state.detailRecord["SecondaryAccountPayableEmail"]);
+    setPGFirstName(location.state.detailRecord["PGFirstName"]);
+    setPGMiddleName(location.state.detailRecord["PGMiddleName"]);
+    setPGLastName(location.state.detailRecord["PGLastName"]);
+    setPGTitle(location.state.detailRecord["PGTitle"]);
+    setPGPresentHomeAddress(location.state.detailRecord["PGPresentHomeAddress"]);
+    setPGCity(location.state.detailRecord["PGCity"]);
+    setPGState(location.state.detailRecord["PGState"]);
+    setPGZipCode(location.state.detailRecord["PGZip"]);
+    setPGDOB(location.state.detailRecord["PGDOB"]);
+    setPGDate(location.state.detailRecord["PGDate"]);
+    setPGSSN(location.state.detailRecord["PGSSN"]);
+    setPGDriverLicenceNoAndState(location.state.detailRecord["PGDriverLicenceNoAndState"]);
+    setConsentDate(location.state.detailRecord["CASDate"]);
+    //setConsentTermsAndConditions(location.state.detailRecord["CASTermsAndConditions"]);
+    if (location.state.detailRecord["CASTermsAndConditions"] && location.state.detailRecord["CASTermsAndConditions"].length > 0) {
+      if (location.state.detailRecord["CASTermsAndConditions"] === "1" || location.state.detailRecord["CASTermsAndConditions"].toLowerCase() === "true")
+        setConsentTermsAndConditions(true);
+      else
+        setConsentTermsAndConditions(false);
+    }
+    setConsentPrintName(location.state.detailRecord["CASPrintName"]);
+    setConsentTitle(location.state.detailRecord["CASTitle"]);
+    if (location.state.detailRecord["tradeReferences"] && location.state.detailRecord["tradeReferences"].length > 0) {
+      let inputFieldsArr = [];
+      location.state.detailRecord["tradeReferences"].forEach(element => {
+        let record = {
+          CompanyName: element["CompanyName"],
+          AccountID: element["AccountID"],
+          Phone: element["Phone"],
+          EmailID: element["EmailID"]
+        };
+        inputFieldsArr.push(record);
+      });
+      setInputFields(inputFieldsArr);
+    }
   }
 }, [location]);
 
@@ -652,6 +737,8 @@ function getRequestData()
   addCustomerRequest.CompanyInfo.DeliveryCity = DeliveryCity;
   addCustomerRequest.CompanyInfo.DeliveryState = DeliveryState;
   addCustomerRequest.CompanyInfo.DeliveryZip = DeliveryZip;
+
+  addCustomerRequest.CompanyInfo.baidtda = DifferentDeliveryAndBillingAddress;
 
   if(DifferentDeliveryAndBillingAddress===true)
   {
@@ -2239,7 +2326,8 @@ return (
                   <Col md={6}>
                     <div className="mb-3">
                       <Label htmlFor="selectedYear">Business established - Year<code>*</code></Label>
-                      <AvField 
+                        <AvField
+                        ref={c => {establishedYearField = c}}                
                         id="selectedYear"
                         type="select"  
                         name="selectedYear"
@@ -2600,7 +2688,7 @@ return (
             <Col lg="2">
               <br/>
               <button
-                hidden={(headerRecord) ? false : true}
+                hidden={(recordMode==="readonly") ? false : true}
                 type="button"
                 value="addfb1account"
                 className="btn btn-success waves-effect waves-light"
@@ -2651,7 +2739,7 @@ return (
                         type="text"
                         className="form-control"
                         id={"CompanyName"+index}
-                        value={inputField.CompanyNamePhone}
+                        value={inputField.CompanyName}
                         onChange={event => handleInputChange(index, event)}
                         validate={{ 
                           required: { value: true, errorMessage: 'Enter Company Name' }                  
@@ -3144,6 +3232,7 @@ return (
                   <Label htmlFor="PGAuthorizedSigFileUploaded">Authorized Signature<code>*</code></Label>
                   <div className="form-group">
                     <button
+                      disabled={(recordMode==="readonly")?true:false}
                       type="button"
                       onClick={() => {
                         onClickPGAuthSigCapture();
@@ -3155,7 +3244,7 @@ return (
                     </button>
                   </div>
                 </div>
-                <div className="mb-3 col-lg-3">
+                <div className="mb-3 col-lg-3" hidden={(recordMode==="create")?false:true}>
                   <Label htmlFor="PGDate">Date<code>*</code></Label>
                   <AvField
                     name={"PGDate"}
@@ -3167,7 +3256,18 @@ return (
                     max={getCurrDateYYYYMMDD()}
                     onChange={event => setPGDate(event.target.value)}
                   />
-                </div> 
+                  </div>
+                  <div className="mb-3 col-lg-3" hidden={(recordMode==="readonly")?false:true}>
+                  <Label htmlFor="PGDate">Date<code>*</code></Label>
+                  <AvField
+                    name={"PGDate"}
+                    type="date"
+                    className="form-control"
+                    errorMessage="Select Date"
+                    id={"PGDate"}
+                    value={PGDate}
+                  />
+                </div>
                 <div>
                 {PGAuthorizedSigFileUploaded
                   ? <img className="rounded mr-2"
@@ -3285,7 +3385,7 @@ return (
                 <p>I CERTIFY THAT THE FOREGOING INFORMATION IS TRUE AND CORRECT and agree to the above Terms and Conditions.</p>
               </Row>
 
-              <Row>
+              <Row hidden={(recordMode==="readonly")?true:false}>
                 <Col md="6">
                   <AvGroup check className="mb-3">
                     <AvInput 
@@ -3296,6 +3396,7 @@ return (
                       type="checkbox"
                       className="form-check-input"
                       id={"ConsentTermsAndConditions"}
+                      value={ConsentTermsAndConditions}
                       onChange={event => onChangeConsentTermsNConditions(event)}
                       validate={{ 
                         required: { value: true, errorMessage: 'Please Agree to terms and conditions' },
@@ -3307,6 +3408,24 @@ return (
                        Agree to terms and conditions<code>*</code>
                     </Label>
                     <AvFeedback>Please Agree to terms and conditions</AvFeedback>
+                  </AvGroup>
+                </Col>
+              </Row>
+
+              <Row hidden={(recordMode==="readonly")?false:true}>
+                <Col md="6">
+                  <AvGroup check className="mb-3">
+                    <AvInput 
+                      name={"ConsentTermsAndConditions"}
+                      errorMessage= 'Please Agree to terms and conditions'
+                      type="checkbox"
+                      className="form-check-input"
+                      id={"ConsentTermsAndConditions"}
+                      checked={ConsentTermsAndConditions} 
+                      />
+                    <Label check>
+                       Agree to terms and conditions<code>*</code>
+                    </Label>
                   </AvGroup>
                 </Col>
               </Row>
@@ -3328,19 +3447,6 @@ return (
                 </div>
                 <div className="mb-3 col-lg-3">
                   <Label htmlFor="ConsentAuthorizedSig">Authorized Signature<code>*</code></Label>
-                  {/*
-                  <AvField
-                    name={"ConsentAuthorizedSig"}
-                    type="text"
-                    className="form-control"
-                    id={"ConsentAuthorizedSig"}
-                    value={ConsentAuthorizedSig}
-                    onChange={event => setConsentAuthorizedSig(event.target.value)}
-                    validate={{ 
-                      required: { value: true, errorMessage: 'Enter Authorized Signature' }                  
-                    }}
-                  />
-                  */}
                   <div className="form-group">
                     <button
                       type="button"
@@ -3348,7 +3454,8 @@ return (
                         onClickConsentAuthSigCapture();
                       }}
                       className="btn btn-primary waves-effect waves-light"
-                      data-toggle="modal"
+                                    data-toggle="modal"
+                      disabled={(recordMode==="create")?false:true}
                     >
                     Capture Signature
                     </button>
@@ -3368,7 +3475,7 @@ return (
                     }}
                   />
                 </div>
-                <div className="mb-3 col-lg-3">
+                <div className="mb-3 col-lg-3" hidden={(recordMode==="create")?false:true}>
                   <Label htmlFor="ConsentDate">Date<code>*</code></Label>
                   <AvField
                     name={"ConsentDate"}
@@ -3379,6 +3486,17 @@ return (
                     defaultValue={getCurrDateYYYYMMDD()}
                     max={getCurrDateYYYYMMDD()}
                     onChange={event => setConsentDate(event.target.value)}
+                  />
+                </div>
+                <div className="mb-3 col-lg-3" hidden={(recordMode==="readonly")?false:true}>
+                  <Label htmlFor="ConsentDate">Date<code>*</code></Label>
+                  <AvField
+                    name={"ConsentDate"}
+                    type="date"
+                    className="form-control"
+                    errorMessage="Select Date"
+                    id={"ConsentDate"}
+                    value={ConsentDate}
                   />
                 </div>
               </Row>

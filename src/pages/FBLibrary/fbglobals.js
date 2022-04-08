@@ -5,7 +5,6 @@
     Common Components
 
 */
-
 import { 
     MDBDataTable, 
    } from "mdbreact"

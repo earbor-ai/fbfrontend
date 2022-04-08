@@ -53,12 +53,38 @@ import {
   setInnerHTML,
   baseUrl,
   getCurrDateMMDDYYYYwithSep,
+  NARFPurposeList,
+  NARFOperatingUnitList,
+  NARFDistrictNoList,
+  NARFSearchTypeList,
+  NARFManagedByList,
+  NARFNewAcctAcqByList,
+  NARFEquipSerLevelList,
+  NARFTaxGroupList,
+  NARFCustomerSegmentList,
+  NARFPOSProgrameList,
+  NARFAlliedEquipProgList,
+  NARFPriceProtectionList,
+  NARFCustomerGroupList,
+  NARFAlliedDiscountList,
+  NARFWeeklyCoffeeVolumeList,
+  NARFEquipProgrameList,
+  NARFEstiBiWeeklySalesList,
+  NARFTermsOFSaleList,
+  NARFAdjustmentScheduleList,
+  NARFFreightHandlingCodeList,
+  NARFDailyDeliverySequenceList,
+  NARFFreqDailyDeliveryList,
+  NARFEmployeeTitleList,
+  NARFBusinessUnitList,
 } from "../FBLibrary/fbglobals"
 
 import {
   getNARFLookup,
   addRecordNARF,
   uploadDocsNARF,
+  getFB1,
+  getNARF,
 } from "../FBLibrary/NWCallsRepository"
 
 import { CustomerInformation } from "./CustomerInformation"
@@ -84,6 +110,7 @@ const NARF = () => {
   const [isHiddenFB1But, setIsHiddenFB1But] = useState(true);
   const [isHiddenNARFBut, setIsHiddenNARFBut] = useState(true);
   const [headerRecord, setHeaderRecord] = useState(null);
+  const [detailRecord, setDetailRecord] = useState(null);
   const [recordMode, setRecordMode] = useState("create"); //create-edit-readonly
   const [customerId, setCustomerId] = useState(null); //existing customer-id available in headerRecord
   const [fb1RedirectStateDict, setFb1RedirectStateDict] = useState(null);
@@ -168,16 +195,6 @@ const NARF = () => {
   const [categoryAlliedAdjustment, setCategoryAlliedAdjustment] = useState("");
   const [resaleCertificateNoFileUploaded, setResaleCertificateNoFileUploaded] = useState(null);
 
-  /*
-  const [catAlliedAdj1, setCatAlliedAdj1] = useState("");
-  const [catAlliedAdj2, setCatAlliedAdj2] = useState("");
-  const [catAlliedAdj3, setCatAlliedAdj3] = useState("");
-  const [catAlliedAdj4, setCatAlliedAdj4] = useState("");
-  const [catCode19PriceAdj, setCatCode19PriceAdj] = useState("");
-  const [catCode20PriceAdj, setCatCode20PriceAdj] = useState("");
-  const [catCode26PriceAdj, setCatCode26PriceAdj] = useState("");
-  const [catCode30PriceAdj, setCatCode30PriceAdj] = useState("");
-  */
   const [inputFields, setInputFields] = useState([{categoryCode:"", categoryValue:""}]);
 
   //State variables for Tab5 - BillingDetails
@@ -343,14 +360,17 @@ const NARF = () => {
     }
     else {
       type = "readonly";
+      /*
       history.push({
         pathname: '/accountapplication',
         search: '?type='+type,
         state: { detail: record, recordMode: type, headerRecord: record }
       });
+      */
+      setShowLoadingIndicator(true);
+      execGetDataRequest(record["CustomerID"], "fb1");
     }
-    //setFb1RedirectStateDict({ detail: record, recordMode: type, headerRecord: record });
-    //setShowRedirectionAlert(true);
+
   }
 
   function onClickNARFActionItem(index, description) {
@@ -360,35 +380,48 @@ const NARF = () => {
     clearTab3();
     clearTab4();
     clearTab5();
+    setHeaderRecord(null);
+    setDetailRecord(null);
+    setCustomerId(null);
 
     if (!isHiddenNARFBut && description.toLowerCase().search("create") > -1) { // create NARF account
-      fillHeaderData(index);
+      let record = searchResults[index];
+      fillHeaderData(record);
       setRecordMode("create");
       console.log("onClickNARFActionItem: recordMode - create");
+
+      toggleTab(3);
+      pushIntoVisitedTabs(3);
     }
-    else if (!isHiddenNARFBut && (description.toLowerCase().search("open") > -1 || description.toLowerCase().search("completed") > -1)) { // edit NARF account
-      fillHeaderData(index);
+    else if (!isHiddenNARFBut && (description.toLowerCase().search("open") > -1)) { // edit NARF account
+      let record = searchResults[index];
+      fillHeaderData(record);
       setRecordMode("readonly"); //TODO
       console.log("onClickNARFActionItem: recordMode - readonly");
     }
-    else { //modify NARF account
-      fillHeaderData(index);
-      setRecordMode("readonly");
+    else if(description.toLowerCase().search("completed") > -1) {
+      let record = searchResults[index];
+      //fillHeaderData(record);
+      setRecordMode("readonly"); //TODO
       console.log("onClickNARFActionItem: recordMode - readonly");
+      setShowLoadingIndicator(true);
+      execGetDataRequest(record["CustomerID"], "narf");
     }
-    toggleTab(3);
-    pushIntoVisitedTabs(3);
     
   }
 
-  function fillHeaderData(index) {
+  function fillHeaderData(record) {
 
-    let record = searchResults[index];
+    //let record = searchResults[index];
     if (isDebug) {
-      console.log("fillHeaderData - index: " + index + " record:");
+      console.log("fillHeaderData - record: ");
       console.log(record);
+      console.log("fillHeaderData - baidtda: " + record["baidtda"]);
     }
-    if (record) {
+
+    if (record && Object.keys(record).length > 0) {
+      let found = null;
+
       setHeaderRecord(JSON.parse(JSON.stringify(record)));
 
       setAlphaDBAName(record["DBAName"]);
@@ -402,16 +435,79 @@ const NARF = () => {
       setZipCode(record["DeliveryZip"]);
       setLocationPhoneNo(record["Phone"]);
       setLocationFaxNo(record["Fax"]);
+      setCustomerContactName(record["customerContactName"]);
       setCustomerEmail(record["Email"]);
       setCounty(record["County"]);
       setOwnerName(record["OwnerName"]);
       setFederalTaxIDNo(record["FederalTaxID"]);
       setResaleCertificateNo(record["ResaleCertificateNumber"]);
-      setTaxGroup(record["TaxGroup"]);
+      //setTaxGroup(record["TaxGroup"]);
+
+      if (record["TaxGroup"] && record["TaxGroup"].length > 0) {
+        found = NARFTaxGroupList.find(element => {
+          if (element.code === record["TaxGroup"]) {
+            setTaxGroup(element.code + " - " + element.desc);
+            return (true);
+          }
+          else {
+            return (false);
+          }
+        });
+      }
+
+      if (record["baidtda"] && record["baidtda"] !== "" && record["baidtda"].length > 0) {
+        if (record["baidtda"] === "False")
+          setIsBillingAddressDiffThanDelivery(false);
+        else if (record["baidtda"] === "True")
+          setIsBillingAddressDiffThanDelivery(true);
+        else
+          setIsBillingAddressDiffThanDelivery(false);
+      }
+      else {
+        setIsBillingAddressDiffThanDelivery(false);
+      }
+
       setBillingAddress(record["BillingAddress"]);
       setBillingCity(record["BillingCity"]);
       setBillingState(record["BillingState"]);
       setBillingZipCode(record["BillingZip"]);
+  
+      if (record["alphaName"] && record["alphaName"] !== "" && record["alphaName"].length > 0)
+        setBillingAlphaName(record["alphaName"]);
+      if (record["legalMailingName"] && record["legalMailingName"] !== "" && record["legalMailingName"].length > 0)
+        setLegalMailingName(record["legalMailingName"]);
+      if (record["eeBilltoAcc"] && record["eeBilltoAcc"] !== "" && record["eeBilltoAcc"].length > 0)
+        setEnterExistingBillToAccountNo(record["eeBilltoAcc"]);
+      if (record["cnBilltoAcc"] && record["cnBilltoAcc"] !== "" && record["cnBilltoAcc"].length > 0)
+        setCreateNewBillToAccountNo(record["cnBilltoAcc"]);
+      if (record["dailyDelvSeq"] && record["dailyDelvSeq"] !== "" && record["dailyDelvSeq"].length > 0) {
+        found = NARFDailyDeliverySequenceList.find(element => {
+          if (element.code === record["dailyDelvSeq"]) {
+            setDailyDeliverySequence(element.code);
+            return (true);
+          }
+          else {
+            return (false);
+          }
+        });
+    
+      }
+      if (record["freqDailyDelv"] && record["freqDailyDelv"] !== "" && record["freqDailyDelv"].length > 0) {
+        found = NARFFreqDailyDeliveryList.find(element => {
+          if (element.code === record["freqDailyDelv"]) {
+            setFrequencyDailyDelivery(element.code + " - " + element.desc);
+            return (true);
+          }
+          else {
+            return (false);
+          }
+        });
+    
+      }
+      
+      setBillingAlphaName(record["alphaName"]);
+
+      //TODO - Existing or Create New option - record["eocno"]
 
       setCustomerId(record["CustomerID"]);
     }
@@ -764,10 +860,12 @@ function hideAlert(){
     addRecord.AlliedDiscount = alliedDiscount.split(" - ")[0];
     addRecord.WeeklyCoffeeVolume = weeklyCoffeeVolume.split(" - ")[0];
     addRecord.EquipmentProgram = equipmentProgram.split(" - ")[0];
+
     if (estimatedBiWeeklySales!=='' && estimatedBiWeeklySales.length>0)
       addRecord.EstBiWeeklySales = estimatedBiWeeklySales.split("$")[1];
     else
       addRecord.EstBiWeeklySales = '';
+
     addRecord.TermsOfSale = termsOfSale.split(" - ")[0];
     addRecord.CreditLimit = creditLimit;
     addRecord.AdjustmentSchedule = adjustmentSchedule.split(" - ")[0];
@@ -962,16 +1060,6 @@ function hideAlert(){
     setEmployeeNameNo("");
     setCategoryAlliedAdjustment("");
     setResaleCertificateNoFileUploaded(null);
-    /*
-    setCatAlliedAdj1("");
-    setCatAlliedAdj2("");
-    setCatAlliedAdj3("");
-    setCatAlliedAdj4("");
-    setCatCode19PriceAdj("");
-    setCatCode20PriceAdj("");
-    setCatCode26PriceAdj("");
-    setCatCode30PriceAdj("");
-    */
   }
 
   function clearTab5() {
@@ -1013,70 +1101,6 @@ function hideAlert(){
     }
   }
 
-  /*async function execLookupDataRequest() {
-
-    if(isDebug)
-      console.log("execLookupDataRequest: Begin");
-    
-    const postData = getLookupRequestPostData();
-    const responseData1 = await getNARFLookup(postData);
-    //const responseData = JSON.parse(JSON.stringify(responseData1)); //comment this for build
-    const responseData = JSON.parse(responseData1); //uncomment this for build
-
-    if (responseData) {
-      
-      if (Object.keys(responseData).findIndex(element => element === "result") > -1) {
-        if (isDebug) {
-          console.log("execLookupDataRequest - responseData");
-          console.log(responseData);
-        }
-        if (responseData.result === "Success") {
-          
-          let jsonResult= responseData;
-          let jsonData = jsonResult.data["accounts"];
-
-          if (isDebug) {
-            console.log("execLookupDataRequest - jsonData");
-            console.log(jsonData);
-          }
-
-          if (!jsonData || jsonData.length==0) {
-            console.log("execLookupDataRequest: Search Data Empty - jsonData");
-            console.log(jsonData);
-            setShowLoadingIndicator(false);
-            showAlert("error", "Error", "Search Data Empty !!")
-            handleLookupDataFailure();
-            return;
-          }
-          else {
-            console.log("execLookupDataRequest: Search Data Call Success");
-            handleLookupDataSuccess(jsonData);
-            setShowLoadingIndicator(false);
-            return;
-          }
-        }
-        else if (responseData.result === "Failed") {
-          console.log("execLookupDataRequest: Search Data Call Failed");
-          setShowLoadingIndicator(false);
-          showAlert("error", "Error" ,"Search Data Fetch Error !")
-          handleLookupDataFailure();
-          return;
-        }
-      }
-      else {
-        console.log("execLookupDataRequest: Server/Network Error !");
-        console.log(responseData);
-        setShowLoadingIndicator(false);
-        showAlert("error", "Error" ,"Search Data Fetch Server/Network error !");
-        handleLookupDataFailure();
-        return;
-      }
-    }
-    
-    if(isDebug)
-      console.log("execLookupDataRequest: End");
-  }*/
-
   async function execLookupDataRequest() {
 
     if(isDebug)
@@ -1097,9 +1121,7 @@ function hideAlert(){
         if (responseData.result === "Success") {
           
           let jsonResult= responseData;
-          let jsonData = 
-jsonResult.data
-["accounts"];
+          let jsonData = jsonResult.data["accounts"];
 
           if (isDebug) {
             console.log("execLookupDataRequest - jsonData");
@@ -1141,7 +1163,7 @@ jsonResult.data
     
     if(isDebug)
       console.log("execLookupDataRequest: End");
-  } 
+  }
 
   function getLookupRequestPostData() {
 
@@ -1401,10 +1423,11 @@ jsonResult.data
       let list = JSON.parse(JSON.stringify(searchDataList));
       let findIndex = list.findIndex(element => element["CustomerID"] === customerId);
       if (findIndex > -1 && list[findIndex]["CustomerID"] === customerId) {
-        var cdate = new Date();
-        var tmonth = cdate.getMonth()+1; // 1-12
-        var tdate = cdate.getDate(); //1-31
-        var cDateStr = "" + tmonth + "/" + tdate + "/" + cdate.getFullYear(); //mm-dd-yyyy
+        //var cdate = new Date();
+        //var tmonth = cdate.getMonth()+1; // 1-12
+        //var tdate = cdate.getDate(); //1-31
+        //var cDateStr = "" + tmonth + "/" + tdate + "/" + cdate.getFullYear(); //mm-dd-yyyy
+        var cDateStr = getCurrDateMMDDYYYYwithSep("/");
         list[findIndex]["narfStatus"] = "COMPLETED";
         list[findIndex]["narfUpdatedDate"] = cDateStr;
         handleLookupDataSuccess(list);
@@ -1417,6 +1440,412 @@ jsonResult.data
     setCustomerId(null);
 
     toggleTab(2);
+  }
+
+  async function execGetDataRequest(CustomerID, recordType) {
+
+    if(isDebug)
+      console.log("execGetDataRequest: Begin - CustomerID: " + CustomerID + " - recordType: " + recordType);
+    
+    const postData = { "CustomerID": CustomerID };
+    let responseData1;
+
+    if (recordType === "fb1")
+      responseData1 = await getFB1(postData);
+    else if (recordType === "narf")
+      responseData1 = await getNARF(postData);
+    
+    //const responseData = JSON.parse(JSON.stringify(responseData1)); //comment this for build
+    const responseData = JSON.parse(responseData1); //uncomment this for build
+
+    if (responseData) {
+      
+      if (Object.keys(responseData).findIndex(element => element === "result") > -1 && responseData["error"] === "") {
+        if (isDebug) {
+          console.log("execGetDataRequest - responseData");
+          console.log(responseData);
+        }
+        if (responseData.result === "Success") {
+          
+          let jsonResult= responseData;
+          let jsonData = jsonResult.data;
+
+          if (isDebug) {
+            if (jsonData) {
+              console.log("execGetDataRequest - Object.keys(jsonData).length: " + Object.keys(jsonData).length);
+              console.log("execGetDataRequest - jsonData");
+              console.log(jsonData);
+            }
+          }
+
+          if (jsonData && Object.keys(jsonData).length === 0) {
+            console.log("execGetDataRequest: Get Data Empty !!");
+            console.log(jsonData);
+            setShowLoadingIndicator(false);
+            showAlert("warning", "OOPS!", "Get Data Call Failed")
+            (recordType === "narf") ? handleGetDataNARFFailure() : handleGetDataFB1Failure();
+            return;
+          }
+          else if (jsonData && Object.keys(jsonData).length > 0){
+            console.log("execGetDataRequest: Get Data Call Success");
+            setShowLoadingIndicator(false);
+            (recordType === "narf") ? handleGetDataNARFSuccess(jsonData) : handleGetDataFB1Success(jsonData);
+            //return;
+          }
+        }
+        else if (responseData.result === "Failed") {
+          console.log("execGetDataRequest: Get Data Call Failed !");
+          setShowLoadingIndicator(false);
+          showAlert("warning", "OOPS!!" ,"Get Data Call Failed")
+          (recordType === "narf") ? handleGetDataNARFFailure() : handleGetDataFB1Failure();
+          return;
+        }
+      }
+      else {
+        console.log("execGetDataRequest: Server/Network Error !");
+        console.log(responseData);
+        setShowLoadingIndicator(false);
+        showAlert("warning", "OOPS!!" ,"Get Data Call Server/Network error !");
+        (recordType === "narf") ? handleGetDataNARFFailure() : handleGetDataFB1Failure();
+        return;
+      }
+    }
+    
+    if(isDebug)
+      console.log("execGetDataRequest: End");
+  }
+
+  function handleGetDataFB1Success(jsonData) {
+    if(isDebug)
+      console.log("handleGetDataFB1Success: Begin");
+
+    let headerRecord = jsonData["headerRecord"]["accounts"][0];
+    let detailRecord = jsonData["detailRecord"];
+    let type = "readonly";
+    history.push({
+      pathname: '/accountapplication',
+      search: '?type='+type,
+      state: { recordMode: type, headerRecord: headerRecord, detailRecord: detailRecord}
+    });
+
+    if(isDebug)
+      console.log("handleGetDataFB1Success: End");  
+  }
+
+  function handleGetDataNARFSuccess(jsonData) {
+    if(isDebug)
+      console.log("handleGetDataNARFSuccess: Begin");
+
+    //clearTab3();
+    //clearTab4();
+    //clearTab5();
+    //setHeaderRecord(null);
+    //setDetailRecord(null);
+    //setCustomerId(null);
+
+    fillHeaderData(jsonData["headerRecord"]["accounts"][0]);
+    fillDetailData(jsonData["detailRecord"]);
+
+    toggleTab(3);
+    pushIntoVisitedTabs(3);
+
+    if(isDebug)
+      console.log("handleGetDataNARFSuccess: End");  
+    
+  }
+
+  function handleGetDataFB1Failure() {
+    if(isDebug)
+      console.log("handleGetDataFB1Failure: Begin");
+
+    //TODO
+
+    if(isDebug)
+      console.log("handleGetDataFB1Failure: End");  
+  }
+
+  function handleGetDataNARFFailure() {
+    if(isDebug)
+      console.log("handleGetDataNARFFailure: Begin");
+
+    //TODO
+
+    if(isDebug)
+      console.log("handleGetDataNARFFailure: End");  
+  }
+
+  function fillDetailData(jsonData) {
+    if(isDebug)
+      console.log("fillDetailData: Begin");
+    let found = false;
+
+    if (jsonData && Object.keys(jsonData).length > 0) {
+
+      setDetailRecord(jsonData);
+
+      setOriginatorName(jsonData["originatorName"]);
+      setOriginatorPhone(jsonData["originatorPhone"]);
+      setCustomerCellNumber(jsonData["customerCell"]);
+
+      found = NARFPurposeList.find(element => {
+        if (element.code === jsonData["purpose"]) {
+          setPurpose(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      setOperatingUnit(jsonData["operatingUnit"]);
+
+      if (jsonData["operatingUnit"] === "RDS" || jsonData["operatingUnit"] === "DSD") {
+        setRoute(jsonData["route"]);
+        setBranchNo(jsonData["branch"]);
+        setDistrictNo(jsonData["district"]);
+        setRegionNo(jsonData["region"]);
+      }
+      else if (jsonData["operatingUnit"] === "NTL") {
+        found = NARFBusinessUnitList.find(element => {
+          if (element.code === jsonData["businessUnit"]) {
+            setBusinessUnitNTL(element.code + " - " + element.desc);
+            return (true);
+          }
+          else {
+            return (false);
+          }
+        });
+        setBranchNo(jsonData["branch"]);
+        setRegionNo(jsonData["region"]);
+        found = NARFDistrictNoList.find(element => {
+          if (element.code === jsonData["district"]) {
+            setDistrictNo(element.code + " - " + element.desc);
+            return (true);
+          }
+          else {
+            return (false);
+          }
+        });
+      }
+
+      found = NARFSearchTypeList.find(element => {
+        if (element.code === jsonData["searchType"]) {
+          setSearchType(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFNewAcctAcqByList.find(element => {
+        if (element.code === jsonData["acctAcquiredBySA"]) {
+          setNewAcctAcquiredBy(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFEquipSerLevelList.find(element => {
+        if (element.code === jsonData["equipServiceLevel"]) {
+          setEquipmentServiceLevel(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      //taxGroup - TODO - available in header record
+
+      found = NARFManagedByList.find(element => {
+        if (element.code === jsonData["managedBy"]) {
+          setManagedBy(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFCustomerSegmentList.find(element => {
+        if (element.code === jsonData["customerSegment"]) {
+          setCustomerSegment(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFPOSProgrameList.find(element => {
+        if (element.code === jsonData["posProgram"]) {
+          setPosProgram(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFAlliedEquipProgList.find(element => {
+        if (element.code === jsonData["alliedEquipProgram"]) {
+          setAlliedEquipProgram(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFPriceProtectionList.find(element => {
+        if (element.code === jsonData["priceProtection"]) {
+          setPriceProtection(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFCustomerGroupList.find(element => {
+        if (element.code === jsonData["customerGroup"]) {
+          setCustomerGroup(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFAlliedDiscountList.find(element => {
+        if (element.code === jsonData["alliedDiscount"]) {
+          setAlliedDiscount(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFWeeklyCoffeeVolumeList.find(element => {
+        if (element.code === jsonData["weeklyCoffeeVolume"]) {
+          setWeeklyCoffeeVolume(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFEquipProgrameList.find(element => {
+        if (element.code === jsonData["equipmentProgram"]) {
+          setEquipmentProgram(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFEstiBiWeeklySalesList.find(element => {
+        if (element.code === jsonData["estBiWeeklySales"]) {
+          setEstimatedBiWeeklySales("$" + element.code);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFTermsOFSaleList.find(element => {
+        if (element.code === jsonData["termsOfSale"]) {
+          console.log("fillDetailData: code - " + element.code + "; desc - " + element.desc);
+          setTermsOfSale(element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      setCreditLimit(jsonData["creditLimit"]);
+
+      found = NARFAdjustmentScheduleList.find(element => {
+        if (element.code === jsonData["adjustmentSchedule"]) {
+          setAdjustmentSchedule(element.code);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFFreightHandlingCodeList.find(element => {
+        if (element.code === jsonData["freightHandlingCode"]) {
+          setFreightHandlingCode(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      /* TODOs
+      found = NARFDailyDeliverySequenceList.find(element => {
+        if (element.code === jsonData["dailyDeliverySequence"]) {
+          setDailyDeliverySequence(element.code);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      found = NARFFreqDailyDeliveryList.find(element => {
+        if (element.code === jsonData["frequencyDailyDelivery"]) {
+          setFrequencyDailyDelivery(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+      */
+
+      setParentNumber(jsonData["parentNumber"]);
+      setParentChainNumber(jsonData["parentChainNumber"]);
+      setNewAcctAcquiredBy1(jsonData["acctAcquiredByRSR"]);
+      setEmployeeNameNo(jsonData["employeeName"]);
+
+      found = NARFEmployeeTitleList.find(element => {
+        if (element.code === jsonData["employeeTitle"]) {
+          setEmployeeTitle(element.code + " - " + element.desc);
+          return (true);
+        }
+        else {
+          return (false);
+        }
+      });
+
+      if (jsonData["categoryAlliedAdjustment"] && jsonData["categoryAlliedAdjustment"].length > 0) {
+        let inputArr = jsonData["categoryAlliedAdjustment"];
+        let arr = [];
+        inputArr.forEach(element => {
+          arr.push({ "categoryCode": element.categoryCode, "categoryValue": element.categoryValue });
+        })
+        if (arr.length > 0) {
+          setInputFields(arr);
+        }
+        
+      }
+      setBillingNotes(jsonData["Notes"]);
+    }
+
+    if(isDebug)
+      console.log("fillDetailData: End");  
   }
 
   return (
@@ -1987,6 +2416,7 @@ jsonResult.data
                                     type="checkbox"
                                     className="form-check-input"
                                     onChange={e => { handleCheckbox(e.target.checked) }}
+                                    disabled={(recordMode==="readonly")?true:false}
                                   />
                                 </p>
                               </Row>
